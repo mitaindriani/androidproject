@@ -1,83 +1,116 @@
-package com.example.absensi;
+package com.example.absensi; // Ganti dengan package aplikasi Anda
 
 import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.View;
+import android.provider.MediaStore;
+import android.view.View; // Import View untuk OnClickListener
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class HomeActivity extends AppCompatActivity {
 
-    private Button buttonDismiss;
-    private Button buttonAbsenMasuk;
-    private Button buttonAbsenPulang;
+    Button btnAbsenMasuk;
+    Button btnAbsenPulang;
+    Button navigation_profile;
+    Button navigation_home;
+    Button navigation_rekap;
+
+    private static final int REQUEST_IMAGE_CAPTURE_MASUK = 1;
+    private static final int REQUEST_IMAGE_CAPTURE_PULANG = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        buttonDismiss = findViewById(R.id.button_dismiss);
-        buttonAbsenMasuk = findViewById(R.id.button_absen_masuk);
-        buttonAbsenPulang = findViewById(R.id.button_absen_pulang);
+        btnAbsenMasuk = findViewById(R.id.btnAbsenMasuk);
+        btnAbsenPulang = findViewById(R.id.btnAbsenPulang);
+        navigation_profile = findViewById(R.id.navigation_profile);
+        navigation_home = findViewById(R.id.navigation_home);
+        navigation_rekap = findViewById(R.id.navigation_rekap);
 
-        buttonDismiss.setOnClickListener(new View.OnClickListener() {
+        // Di dalam onCreate() HomeActivity
+        btnAbsenMasuk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Tambahkan logika untuk menyembunyikan atau menutup card_selamat_datang
-                // Misalnya:
-                // CardView cardSelamatDatang = findViewById(R.id.card_selamat_datang);
-                // cardSelamatDatang.setVisibility(View.GONE);
-                Toast.makeText(HomeActivity.this, "Dismiss clicked", Toast.LENGTH_SHORT).show();
+                Intent cameraIntent = new Intent(HomeActivity.this, ActivityCamera.class);
+                cameraIntent.putExtra("absen_type", "masuk");
+                startActivity(cameraIntent);
             }
         });
 
-        buttonAbsenMasuk.setOnClickListener(new View.OnClickListener() {
+        btnAbsenPulang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Tambahkan logika untuk proses absen masuk
-                Toast.makeText(HomeActivity.this, "Absen Masuk clicked", Toast.LENGTH_SHORT).show();
+                Intent cameraIntent = new Intent(HomeActivity.this, ActivityCamera.class);
+                cameraIntent.putExtra("absen_type", "pulang");
+                startActivity(cameraIntent);
             }
         });
 
-        buttonAbsenPulang.setOnClickListener(new View.OnClickListener() {
+        // Di dalam OnClickListener untuk navigation_profile di HomeActivity.java
+        navigation_profile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Tambahkan logika untuk proses absen pulang
-                Toast.makeText(HomeActivity.this, "Absen Pulang clicked", Toast.LENGTH_SHORT).show();
+                Toast.makeText(HomeActivity.this, "Pindah ke Profil", Toast.LENGTH_SHORT).show();
+                Intent profileIntent = new Intent(HomeActivity.this, ProfilActivity.class);
+                profileIntent.putExtra("nama", "Nama Pengguna Saat Ini"); // Ganti dengan data nama sebenarnya
+                profileIntent.putExtra("id", "ID Pengguna Saat Ini");     // Ganti dengan data ID sebenarnya
+                startActivity(profileIntent);
             }
         });
 
-        // Implementasi onClickListeners untuk item navigasi bawah (Profile, Home, Rekap)
-        // Anda bisa menggunakan findViewById untuk mendapatkan referensi ke LinearLayout
-        // atau ImageView/TextView di setiap item dan mengatur onClickListener.
-
-        LinearLayout profileNav = findViewById(R.id.bottom_navigation).getChildAt(0);
-        profileNav.setOnClickListener(new View.OnClickListener() {
+        navigation_home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Profile clicked", Toast.LENGTH_SHORT).show();
-                // Tambahkan intent atau logika untuk membuka halaman Profile
+                // Kita sudah berada di HomeActivity
+                Toast.makeText(HomeActivity.this, "Anda sudah di Home", Toast.LENGTH_SHORT).show();
             }
         });
 
-        LinearLayout homeNav = findViewById(R.id.bottom_navigation).getChildAt(1);
-        homeNav.setOnClickListener(new View.OnClickListener() {
+        navigation_rekap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Home clicked", Toast.LENGTH_SHORT).show();
-                // Jika sudah berada di HomeActivity, mungkin tidak perlu melakukan apa-apa
+                // Arahkan ke Activity Rekap (ganti RekapActivity.class dengan activity yang sesuai)
+                Toast.makeText(HomeActivity.this, "Pindah ke Rekap", Toast.LENGTH_SHORT).show();
+                Intent rekapIntent = new Intent(HomeActivity.this, RekapActivity.class);
+                startActivity(rekapIntent);
             }
         });
+    }
 
-        LinearLayout rekapNav = findViewById(R.id.bottom_navigation).getChildAt(2);
-        rekapNav.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Rekap clicked", Toast.LENGTH_SHORT).show();
-                // Tambahkan intent atau logika untuk membuka halaman Rekap
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE_MASUK) {
+                // Mendapatkan foto yang diambil dari kamera
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+
+                // Membuat Intent untuk berpindah ke KonfirmasiAbsenActivity
+                Intent konfirmasiIntent = new Intent(this, KonfirmasiAbsenActivity.class);
+                konfirmasiIntent.putExtra("image", imageBitmap); // Mengirim data gambar
+                konfirmasiIntent.putExtra("absen_type", "masuk"); // Mengirim jenis absensi
+                startActivity(konfirmasiIntent);
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE_PULANG) {
+                // Mendapatkan foto yang diambil dari kamera
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+
+                // Membuat Intent untuk berpindah ke KonfirmasiAbsenActivity
+                Intent konfirmasiIntent = new Intent(this, KonfirmasiAbsenActivity.class);
+                konfirmasiIntent.putExtra("image", imageBitmap); // Mengirim data gambar
+                konfirmasiIntent.putExtra("absen_type", "pulang"); // Mengirim jenis absensi
+                startActivity(konfirmasiIntent);
             }
-        });
+        } else if (resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Pengambilan foto dibatalkan", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Gagal mengambil foto", Toast.LENGTH_SHORT).show();
+        }
     }
 }

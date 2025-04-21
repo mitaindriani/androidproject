@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">absensi</string>
+    <string name="school_logo">Logo Sekolah</string>
+    <string name="attendance_photo">Foto Absensi</string>
+    <string name="confirm_attendance">Konfirmasi Kehadiran</string>
+    <string name="profile_picture" />
 </resources>
