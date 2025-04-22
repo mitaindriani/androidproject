@@ -33,7 +33,7 @@ public class ProfilActivity extends AppCompatActivity {
         namaTextView = findViewById(R.id.userNameTextView); // Menggunakan ID yang sama dengan HomeActivity
         userIdTextView = findViewById(R.id.userIdTextView);   // Menggunakan ID yang sama dengan HomeActivity
         userInfoLinearLayout = findViewById(R.id.userInfoLinearLayout);
-        keluarLinearLayout = findViewById(R.id.keluarLinearLayout);
+        ImageView keluarImageView = findViewById(R.id.logoutImageView);
         profileButtonLinearLayout = findViewById(R.id.profile_button_layout);
         homeButtonLinearLayout = findViewById(R.id.home_button_layout);
         rekapButtonLinearLayout = findViewById(R.id.rekap_button_layout);
@@ -56,7 +56,7 @@ public class ProfilActivity extends AppCompatActivity {
         }
 
         // Listener untuk tombol "Keluar" (simulasi logout)
-        keluarLinearLayout.setOnClickListener(new View.OnClickListener() {
+        keluarImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Implementasikan logika logout di sini
