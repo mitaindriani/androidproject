@@ -71,16 +71,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return cursorCount > 0;
     }
 
-    // Metode untuk memverifikasi login
-    public boolean checkUser(String nisn, String password) {
+    // Metode untuk memverifikasi login dan mendapatkan data User
+    public User getUser(String nisn, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COLUMN_ID};
+        String[] columns = {COLUMN_ID, COLUMN_NAMA, COLUMN_NISN}; // Tidak perlu mengambil password lagi
         String selection = COLUMN_NISN + " = ?" + " AND " + COLUMN_PASSWORD + " = ?";
         String[] selectionArgs = {nisn, password};
         Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
-        int cursorCount = cursor.getCount();
-        cursor.close();
+
+        User user = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID));
+            String nama = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAMA));
+            String nisn_db = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NISN));
+            user = new User(id, nama, nisn_db);
+            cursor.close();
+        }
         db.close();
-        return cursorCount > 0;
+        return user;
+    }
+
+    // Inner class User to represent user data
+    public static class User {
+        private int id;
+        private String nama;
+        private String nisn;
+
+        public User(int id, String nama, String nisn) {
+            this.id = id;
+            this.nama = nama;
+            this.nisn = nisn;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public String getNama() {
+            return nama;
+        }
+
+        public String getNisn() {
+            return nisn;
+        }
     }
 }

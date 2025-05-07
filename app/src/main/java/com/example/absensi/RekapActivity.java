@@ -4,89 +4,103 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RekapActivity extends AppCompatActivity {
 
-    private LinearLayout profileNav;
-    private LinearLayout homeNav;
-    private LinearLayout rekapNav;
+    private Button profileNav;
+    private Button homeNav;
+    private Button rekapNav;
     private RecyclerView recyclerViewRekap;
+    private List<AbsensiItem> absensiList;
+    private RekapAdapter adapter;
+    private ImageView logoutImageView;
+    private static final String ABSENSI_FILE = "absensi_data.ser";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rekap);
 
-        // Inisialisasi RecyclerView
         recyclerViewRekap = findViewById(R.id.recyclerViewRekap);
         recyclerViewRekap.setLayoutManager(new LinearLayoutManager(this));
+        absensiList = loadAbsensi(); // Load data absensi saat activity dibuat
 
-        // Contoh data - ganti dengan data sesungguhnya dari database Anda
-        List<AbsensiItem> absensiList = new ArrayList<>();
-        absensiList.add(new AbsensiItem(
-                "Jumat 10 Maret 2025",
-                "NAM YOON SOO",
-                "07:16:34",
-                "00:00:00",
-                "-",
-                true
-        ));
-        absensiList.add(new AbsensiItem(
-                "Kamis 09 Maret 2025",
-                "NAM YOON SOO",
-                "07:16:34",
-                "00:00:00",
-                "17:53:20",
-                true
-        ));
-        absensiList.add(new AbsensiItem(
-                "Rabu 08 Maret 2025",
-                "NAM YOON SOO",
-                "07:16:34",
-                "00:00:00",
-                "17:53:20",
-                true
-        ));
-
-        // Set adapter
-        RekapAdapter adapter = new RekapAdapter(absensiList);
+        adapter = new RekapAdapter(absensiList);
         recyclerViewRekap.setAdapter(adapter);
 
-        // Bottom Navigation
         LinearLayout bottomNavigation = findViewById(R.id.bottom_navigation);
         if (bottomNavigation != null && bottomNavigation.getChildCount() == 3) {
-            profileNav = (LinearLayout) bottomNavigation.getChildAt(0);
-            homeNav = (LinearLayout) bottomNavigation.getChildAt(1);
-            rekapNav = (LinearLayout) bottomNavigation.getChildAt(2);
+            profileNav = (Button) bottomNavigation.getChildAt(0);
+            homeNav = (Button) bottomNavigation.getChildAt(1);
+            rekapNav = (Button) bottomNavigation.getChildAt(2);
+            logoutImageView = findViewById(R.id.logoutImageView);
 
             profileNav.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(RekapActivity.this, "Profile clicked", Toast.LENGTH_SHORT).show();
-                    // Tambahkan intent atau navigasi ke halaman Profile
+                    Intent intent = new Intent(RekapActivity.this, ProfilActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
             });
 
             homeNav.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    finish(); // Kembali ke MainActivity atau halaman Home
+                    Intent intent = new Intent(RekapActivity.this, HomeActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
             });
 
             rekapNav.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Saat ini berada di halaman Rekap
+                    Toast.makeText(RekapActivity.this, "Anda sudah berada di halaman Rekap", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            logoutImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(RekapActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
             });
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload data absensi setiap kali activity resume agar data terbaru ditampilkan
+        absensiList = loadAbsensi();
+        adapter.updateData(absensiList);
+    }
+
+    private List<AbsensiItem> loadAbsensi() {
+        List<AbsensiItem> absensiList = new ArrayList<>();
+        try (FileInputStream fileIn = new FileInputStream(getFileStreamPath("absensi_data.ser"));
+             ObjectInputStream objectIn = new ObjectInputStream(fileIn)) {
+            absensiList = (List<AbsensiItem>) objectIn.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            // Jika file tidak ditemukan atau terjadi error lain, kembalikan list kosong
+            // e.printStackTrace();
+        }
+        return absensiList;
     }
 }

@@ -1,5 +1,7 @@
 package com.example.absensi;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +38,14 @@ public class RekapAdapter extends RecyclerView.Adapter<RekapAdapter.RekapViewHol
         holder.textJamDatang.setText("Jam Datang: " + item.getJamDatang());
         holder.textTerlambat.setText("Terlambat: " + item.getTerlambat());
         holder.textJamPulang.setText("Jam Pulang: " + item.getJamPulang());
+
+        byte[] fotoBytes = item.getFotoAbsen();
+        if (fotoBytes != null) {
+            Bitmap fotoBitmap = BitmapFactory.decodeByteArray(fotoBytes, 0, fotoBytes.length);
+            holder.imageProfil.setImageBitmap(fotoBitmap);
+        } else {
+            holder.imageProfil.setImageResource(R.drawable.jae);
+        }
     }
 
     @Override
@@ -58,5 +68,11 @@ public class RekapAdapter extends RecyclerView.Adapter<RekapAdapter.RekapViewHol
             textJamPulang = itemView.findViewById(R.id.textJamPulang);
             imageProfil = itemView.findViewById(R.id.imageProfil);
         }
+    }
+
+    public void updateData(List<AbsensiItem> newList) {
+        absensiList.clear();
+        absensiList.addAll(newList);
+        notifyDataSetChanged();
     }
 }

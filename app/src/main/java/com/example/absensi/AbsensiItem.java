@@ -1,20 +1,24 @@
 package com.example.absensi;
 
-public class AbsensiItem {
+import java.io.Serializable;
+
+public class AbsensiItem implements Serializable {
     private String tanggal;
     private String nama;
     private String jamDatang;
     private String terlambat;
     private String jamPulang;
     private boolean berhasil;
+    private byte[] fotoAbsen;
 
-    public AbsensiItem(String tanggal, String nama, String jamDatang, String terlambat, String jamPulang, boolean berhasil) {
+    public AbsensiItem(String tanggal, String nama, String jamDatang, String terlambat, String jamPulang, boolean berhasil, byte[] fotoAbsen) {
         this.tanggal = tanggal;
         this.nama = nama;
         this.jamDatang = jamDatang;
         this.terlambat = terlambat;
         this.jamPulang = jamPulang;
         this.berhasil = berhasil;
+        this.fotoAbsen = fotoAbsen;
     }
 
     public String getTanggal() {
@@ -39,5 +43,13 @@ public class AbsensiItem {
 
     public boolean isBerhasil() {
         return berhasil;
+    }
+
+    public byte[] getFotoAbsen() {
+        return fotoAbsen;
+    }
+
+    public void setJamPulang(String jamPulang) {
+        this.jamPulang = jamPulang;
     }
 }

@@ -5,66 +5,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/white"
     tools:context=".HomeActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/blue"
         android:theme="?attr/actionBarTheme">
 
         <ImageView
-            android:id="@+id/logoImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/mdi_logout"
-            android:layout_gravity="start"
-            android:contentDescription="Logo Aplikasi" />
+            android:id="@+id/logo_smkn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="20dp"
+            android:src="@drawable/logo"
+            app:layout_constraintTop_toTopOf="@+id/header_bg"
+            app:layout_constraintBottom_toBottomOf="@+id/header_bg"
+            app:layout_constraintStart_toStartOf="@+id/header_bg" />
 
         <TextView
-            android:id="@+id/toolbarTitleTextView"
+            android:id="@+id/text_smkn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="SMKN 1 KEPANJEN"
             android:textSize="18sp"
             android:textStyle="bold"
+            android:textColor="@color/white"
             android:layout_gravity="center" />
 
         <ImageView
             android:id="@+id/logoutImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/mdi_logout"
+            android:src="@drawable/logout"
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
-            android:contentDescription="Logout" />
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="Tombol Logout" />
 
     </androidx.appcompat.widget.Toolbar>
-
-    <LinearLayout
-        android:id="@+id/userInfoLinearLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/userNameTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NAM YOON SOO"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/userIdTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="19740516 199705 1 001"
-            android:textSize="14sp" />
-
-    </LinearLayout>
 
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView"
@@ -80,20 +60,12 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <FrameLayout
-        android:id="@+id/mapFrameLayout"
+    <com.google.android.gms.maps.MapView
+        android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#CCCCCC">
-        <ImageView
-            android:id="@+id/mapImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/maps"
-            android:layout_gravity="center"
-            android:contentDescription="Peta Lokasi" />
-    </FrameLayout>
+        android:contentDescription="Peta lokasi Anda saat ini" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/attendanceCardView"
@@ -124,7 +96,7 @@
                 android:id="@+id/attendanceDateTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="senin, 20 januari 2025"
+                android:text="Kamis, 24 April 2025"
                 android:textSize="14sp"
                 android:layout_marginTop="8dp" />
 
@@ -132,7 +104,7 @@
                 android:id="@+id/attendanceTimeTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="08:00:00"
+                android:text="10:46:00"
                 android:textSize="36sp"
                 android:textStyle="bold"
                 android:layout_marginTop="8dp" />
@@ -165,15 +137,17 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Absen masuk"
-                    android:layout_marginEnd="8dp" />
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Tombol untuk melakukan absensi masuk" />
 
                 <Button
-                    android:id="@+id/btnAbsenPulang"
+                    android:id="@+id/btnAbsenPualang"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Absen pulang"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="8dp"
+                    android:contentDescription="Tombol untuk melakukan absensi pulang" />
 
             </LinearLayout>
 
@@ -195,7 +169,8 @@
             android:layout_weight="1"
             android:text="Profile"
             android:textColor="@android:color/white"
-            style="?android:attr/buttonBarButtonStyle" />
+            style="?android:attr/buttonBarButtonStyle"
+            android:contentDescription="Navigasi ke halaman Profil" />
 
         <Button
             android:id="@+id/navigation_home"
@@ -204,7 +179,8 @@
             android:layout_weight="1"
             android:text="Home"
             android:textColor="@android:color/white"
-            style="?android:attr/buttonBarButtonStyle" />
+            style="?android:attr/buttonBarButtonStyle"
+            android:contentDescription="Navigasi ke halaman Utama" />
 
         <Button
             android:id="@+id/navigation_rekap"
@@ -213,7 +189,8 @@
             android:layout_weight="1"
             android:text="Rekap"
             android:textColor="@android:color/white"
-            style="?android:attr/buttonBarButtonStyle" />
+            style="?android:attr/buttonBarButtonStyle"
+            android:contentDescription="Navigasi ke halaman Rekap Absensi" />
 
     </LinearLayout>
 

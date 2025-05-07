@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -32,6 +34,7 @@ import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -39,6 +42,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class ActivityCamera extends AppCompatActivity {
@@ -51,7 +56,7 @@ public class ActivityCamera extends AppCompatActivity {
     protected CameraDevice cameraDevice;
     protected CameraCaptureSession cameraCaptureSessions;
     protected CaptureRequest.Builder captureRequestBuilder;
-    private Size imageDimension;
+    private Size previewSize;
     private ImageReader imageReader;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private Handler mBackgroundHandler;
@@ -102,13 +107,13 @@ public class ActivityCamera extends AppCompatActivity {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             Log.d(TAG, "onSurfaceTextureAvailable: SurfaceTexture tersedia");
-            openCamera();
+            openCamera(width, height);
         }
 
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             Log.d(TAG, "onSurfaceTextureSizeChanged: Ukuran SurfaceTexture berubah menjadi " + width + "x" + height);
-            // Tidak perlu implementasi khusus saat ini
+            // Tidak perlu implementasi khusus saat ini, penyesuaian rasio aspek dilakukan saat kamera dibuka
         }
 
         @Override
@@ -172,35 +177,90 @@ public class ActivityCamera extends AppCompatActivity {
         }
     }
 
-    private void openCamera() {
+    private void openCamera(int width, int height) {
         CameraManager manager = (CameraManager) getSystemService(CAMERA_SERVICE);
         try {
+            String frontCameraId = null;
             String[] cameraIds = manager.getCameraIdList();
-            if (cameraIds.length > 0) {
-                cameraId = cameraIds[0]; // Atau logika pemilihan kamera yang lebih canggih
-                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-                StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-                if (map == null) {
-                    Log.e(TAG, "openCamera: StreamConfigurationMap is null untuk kamera ID: " + cameraId);
-                    return;
+            for (String id : cameraIds) {
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(id);
+                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    frontCameraId = id;
+                    break;
                 }
-                imageDimension = map.getOutputSizes(SurfaceTexture.class)[0];
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
-                    Log.w(TAG, "openCamera: Izin kamera belum diberikan");
-                    return;
-                }
-                Log.d(TAG, "openCamera: Membuka kamera dengan ID: " + cameraId);
-                manager.openCamera(cameraId, stateCallback, mBackgroundHandler);
-            } else {
-                Log.e(TAG, "openCamera: Tidak ada ID kamera yang tersedia");
             }
+
+            String selectedCameraId = frontCameraId != null ? frontCameraId : (cameraIds.length > 0 ? cameraIds[0] : null);
+            if (selectedCameraId == null) {
+                Log.e(TAG, "openCamera: Tidak ada ID kamera yang tersedia");
+                return;
+            }
+            cameraId = selectedCameraId;
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+            StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            if (map == null) {
+                Log.e(TAG, "openCamera: StreamConfigurationMap is null untuk kamera ID: " + cameraId);
+                return;
+            }
+            Size largest = Collections.max(
+                    Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)),
+                    new CompareSizesByArea()
+            );
+            imageReader = ImageReader.newInstance(largest.getWidth(), largest.getHeight(), ImageFormat.JPEG, /*maxImages*/2);
+
+            Size[] previewSizes = map.getOutputSizes(SurfaceTexture.class);
+            if (previewSizes == null || previewSizes.length == 0) {
+                Log.e(TAG, "openCamera: Tidak ada ukuran pratinjau yang didukung untuk kamera ID: " + cameraId);
+                return;
+            }
+            previewSize = chooseOptimalSize(previewSizes, width, height, largest);
+
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+                Log.w(TAG, "openCamera: Izin kamera belum diberikan");
+                return;
+            }
+            Log.d(TAG, "openCamera: Membuka kamera dengan ID: " + cameraId + ", pratinjau: " + previewSize.getWidth() + "x" + previewSize.getHeight() + ", gambar: " + largest.getWidth() + "x" + largest.getHeight());
+            manager.openCamera(cameraId, stateCallback, mBackgroundHandler);
+            transformImage(width, height);
+
         } catch (CameraAccessException e) {
             Log.e(TAG, "openCamera: Tidak dapat mengakses kamera", e);
             e.printStackTrace();
         } catch (SecurityException e) {
             Log.e(TAG, "openCamera: Izin kamera ditolak oleh sistem", e);
             e.printStackTrace();
+        }
+    }
+
+    private Size chooseOptimalSize(Size[] choices, int textureViewWidth, int textureViewHeight, Size aspectRatio) {
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<Size> bigEnough = new ArrayList<>();
+        int w = aspectRatio.getWidth();
+        int h = aspectRatio.getHeight();
+        for (Size option : choices) {
+            if (option.getHeight() == option.getWidth() * h / w &&
+                    option.getWidth() >= textureViewWidth && option.getHeight() >= textureViewHeight) {
+                bigEnough.add(option);
+            }
+        }
+
+        // Pick the smallest of those big enough. If there is no one big enough, pick the largest of those not big enough.
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
+    }
+
+    static class CompareSizesByArea implements Comparator<Size> {
+        @Override
+        public int compare(Size lhs, Size rhs) {
+            // We cast here to ensure the multiplications won't overflow
+            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
+                    (long) rhs.getWidth() * rhs.getHeight());
         }
     }
 
@@ -215,7 +275,7 @@ public class ActivityCamera extends AppCompatActivity {
                 Log.e(TAG, "createCameraPreview: cameraDevice is null, tidak dapat membuat pratinjau");
                 return;
             }
-            texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
+            texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
@@ -317,6 +377,8 @@ public class ActivityCamera extends AppCompatActivity {
                         Intent konfirmasiIntent = new Intent(ActivityCamera.this, KonfirmasiAbsenActivity.class);
                         konfirmasiIntent.putExtra("image_bytes", compressedBytes);
                         konfirmasiIntent.putExtra("absen_type", absenType);
+                        // Tambahkan informasi orientasi pengambilan gambar
+                        konfirmasiIntent.putExtra("camera_orientation", ORIENTATIONS.get(rotation));
                         startActivity(konfirmasiIntent);
                         finish();
                     } finally {
@@ -340,11 +402,10 @@ public class ActivityCamera extends AppCompatActivity {
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            openCamera();
+                            openCamera(textureView.getWidth(), textureView.getHeight());
                         }
                     }, 1000); // Coba 1 detik// Coba penundaan
-                }
-            };
+                }};
 
             // Tutup sesi pratinjau sebelum membuat sesi pengambilan gambar
             closePreviewSession();
@@ -393,13 +454,37 @@ public class ActivityCamera extends AppCompatActivity {
         // Dalam implementasi saat ini, kita menutup sesi pratinjau di closePreviewSession.
     }
 
+    private void transformImage(int viewWidth, int viewHeight) {
+        if (previewSize == null || textureView == null) {
+            return;
+        }
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        Matrix matrix = new Matrix();
+        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
+        RectF bufferRect = new RectF(0, 0, previewSize.getHeight(), previewSize.getWidth());
+        float centerX = viewRect.centerX();
+        float centerY = viewRect.centerY();
+        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
+            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
+            float scale = Math.max(
+                    (float) viewHeight / previewSize.getHeight(),
+                    (float) viewWidth / previewSize.getWidth());
+            matrix.postScale(scale, scale, centerX, centerY);
+            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
+        } else if (Surface.ROTATION_180 == rotation) {
+            matrix.postRotate(180, centerX, centerY);
+        }
+        textureView.setTransform(matrix);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Izin kamera diberikan", Toast.LENGTH_SHORT).show();
-                openCamera();
+                openCamera(textureView.getWidth(), textureView.getHeight());
             } else {
                 Toast.makeText(this, "Izin kamera ditolak", Toast.LENGTH_SHORT).show();
                 finish();
@@ -412,20 +497,14 @@ public class ActivityCamera extends AppCompatActivity {
         super.onResume();
         Log.e(TAG, "onResume");
         startBackgroundThread();
-        // Periksa lagi apakah TextureView tersedia sebelum membuka kamera
         if (textureView.isAvailable()) {
             Log.d(TAG, "onResume: TextureView tersedia");
-            if (cameraDevice == null) {
-                Log.d(TAG, "onResume: cameraDevice null, membuka kamera");
-                openCamera();
-            } else {
-                Log.d(TAG, "onResume: cameraDevice sudah ada, membuat pratinjau");
-                createCameraPreview(); // Pastikan pratinjau dibuat jika kamera sudah terbuka
-            }
-        } else {Log.d(TAG, "onResume: TextureView tidak tersedia, mengatur SurfaceTextureListener");
+            openCamera(textureView.getWidth(), textureView.getHeight());
+        } else {
             textureView.setSurfaceTextureListener(textureListener);
         }
     }
+
     @Override
     protected void onPause() {
         Log.e(TAG, "onPause");

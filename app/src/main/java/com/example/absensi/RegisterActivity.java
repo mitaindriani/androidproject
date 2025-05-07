@@ -1,5 +1,7 @@
 package com.example.absensi; // Ganti dengan package aplikasi Anda
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -17,6 +19,7 @@ public class RegisterActivity extends AppCompatActivity {
     private Button buttonRegister;
     private TextView textViewLogin;
     private DatabaseHelper dbHelper;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +35,9 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Inisialisasi DatabaseHelper
         dbHelper = new DatabaseHelper(this);
+
+        // Inisialisasi SharedPreferences
+        sharedPreferences = getSharedPreferences("user_data", MODE_PRIVATE);
 
         // Set listener untuk tombol Daftar
         buttonRegister.setOnClickListener(new View.OnClickListener() {
@@ -59,6 +65,13 @@ public class RegisterActivity extends AppCompatActivity {
 
                 if (result > 0) {
                     Toast.makeText(RegisterActivity.this, "Registrasi berhasil!", Toast.LENGTH_SHORT).show();
+
+                    // Simpan data pengguna ke SharedPreferences
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("nama", nama);
+                    editor.putString("nisn", nisn);
+                    editor.apply();
+
                     finish(); // Kembali ke halaman login setelah registrasi berhasil
                 } else {
                     Toast.makeText(RegisterActivity.this, "Registrasi gagal!", Toast.LENGTH_SHORT).show();
