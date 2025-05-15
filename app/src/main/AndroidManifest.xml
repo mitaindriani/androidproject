@@ -35,6 +35,7 @@
     <activity android:name=".RekapActivity" />
     <activity android:name=".ProfilActivity" />
     <activity android:name=".KonfirAbsenActivity" />
+    <activity android:name=".MasterJadwalActivity" />
 
     <provider
         android:name="androidx.core.content.FileProvider"

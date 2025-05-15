@@ -5,13 +5,19 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class KonfirmasiAbsenActivity extends AppCompatActivity {
 
@@ -21,6 +27,7 @@ public class KonfirmasiAbsenActivity extends AppCompatActivity {
     Button btnAmbilUlang;
     String absenType;
     Bitmap fotoAbsen;
+    private static final String TAG = "KonfirmasiAbsenActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +45,30 @@ public class KonfirmasiAbsenActivity extends AppCompatActivity {
 
         // Menampilkan foto dan jenis absensi
         if (compressedImage != null) {
-            fotoAbsen = BitmapFactory.decodeByteArray(compressedImage, 0, compressedImage.length);
-            Matrix matrix = new Matrix();
-            matrix.postRotate(90);
-            fotoAbsen = Bitmap.createBitmap(fotoAbsen, 0, 0, fotoAbsen.getWidth(), fotoAbsen.getHeight(), matrix, true);
-            fotoAbsenImageView.setImageBitmap(fotoAbsen);
+            try {
+                // 1. Decode byte array menjadi Bitmap
+                fotoAbsen = BitmapFactory.decodeByteArray(compressedImage, 0, compressedImage.length);
+
+                // 2. Gunakan ByteArrayInputStream untuk mendapatkan InputStream dari byte array
+                InputStream inputStream = new ByteArrayInputStream(compressedImage);
+                ExifInterface exifInterface = new ExifInterface(inputStream);
+                int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED);
+                inputStream.close();
+
+                // 3. Putar bitmap jika perlu
+                Bitmap rotatedBitmap = rotateBitmap(fotoAbsen, orientation);
+                fotoAbsen = rotatedBitmap; //update fotoAbsen
+                fotoAbsenImageView.setImageBitmap(rotatedBitmap);
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Gagal memuat gambar.", Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error loading image: " + e.getMessage());
+                fotoAbsenImageView.setImageBitmap(fotoAbsen);
+
+            }
         }
         jenisAbsenTextView.setText("Absen " + absenType.substring(0, 1).toUpperCase() + absenType.substring(1));
 
@@ -75,5 +101,48 @@ public class KonfirmasiAbsenActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    private Bitmap rotateBitmap(Bitmap source, int orientation) {
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return source;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.postRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.postRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.postRotate(270);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.postScale(1, -1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.postRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.postRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            default:
+                return source;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+            if (source != null && !source.isRecycled()) {
+                source.recycle();
+            }
+            return bmRotated;
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

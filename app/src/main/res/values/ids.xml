@@ -8,4 +8,15 @@
     <item name="cameraPreview" type="id" />
     <item name="cameraLayout" type="id" />
     <item name="keluarLinearLayout" type="id" />
+    <item name="navigation_jadwal" type="id" />
+    <item name="seninMasukTextView" type="id" />
+    <item name="seninPulangTextView" type="id" />
+    <item name="selasaMasukTextView" type="id" />
+    <item name="selasaPulangTextView" type="id" />
+    <item name="rabuMasukTextView" type="id" />
+    <item name="rabuPulangTextView" type="id" />
+    <item name="kamisMasukTextView" type="id" />
+    <item name="kamisPulangTextView" type="id" />
+    <item name="jumatMasukTextView" type="id" />
+    <item name="jumatPulangTextView" type="id" />
 </resources>

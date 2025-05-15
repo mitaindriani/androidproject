@@ -117,12 +117,36 @@
                 android:textSize="14sp"
                 android:layout_marginTop="16dp" />
 
-            <TextView
-                android:id="@+id/attendanceTimeRangeTextView"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="08:00:00 - 17:00:00"
-                android:textSize="16sp" />
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+
+                <TextView
+                    android:id="@+id/jadwalMasukTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-"
+                    android:textSize="16sp"
+                    android:layout_marginStart="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="   - "
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/jadwalPulangTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-"
+                    android:textSize="16sp"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/attendanceButtonLinearLayout"

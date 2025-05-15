@@ -10,8 +10,9 @@ public class AbsensiItem implements Serializable {
     private String jamPulang;
     private boolean berhasil;
     private byte[] fotoAbsen;
+    private String nisn; // Tambahkan atribut NISN
 
-    public AbsensiItem(String tanggal, String nama, String jamDatang, String terlambat, String jamPulang, boolean berhasil, byte[] fotoAbsen) {
+    public AbsensiItem(String tanggal, String nama, String jamDatang, String terlambat, String jamPulang, boolean berhasil, byte[] fotoAbsen, String nisn) {
         this.tanggal = tanggal;
         this.nama = nama;
         this.jamDatang = jamDatang;
@@ -19,6 +20,7 @@ public class AbsensiItem implements Serializable {
         this.jamPulang = jamPulang;
         this.berhasil = berhasil;
         this.fotoAbsen = fotoAbsen;
+        this.nisn = nisn; // Inisialisasi NISN
     }
 
     public String getTanggal() {
@@ -51,5 +53,9 @@ public class AbsensiItem implements Serializable {
 
     public void setJamPulang(String jamPulang) {
         this.jamPulang = jamPulang;
+    }
+
+    public String getNisn() {
+        return nisn;
     }
 }
