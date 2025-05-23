@@ -117,7 +117,7 @@ public class CameraPulangActivity extends AppCompatActivity implements SurfaceHo
                             Log.d(TAG, "Foto berhasil disimpan di: " + photoFile.getAbsolutePath());
 
                             // Kirim path foto ke KonfirActivity
-                            Intent intent = new Intent(CameraPulangActivity.this, KonfirmasiAbsenActivity.class);
+                            Intent intent = new Intent(CameraPulangActivity.this, KonfirAbsenActivity.class);
                             intent.putExtra("photoPath", photoFile.getAbsolutePath());
                             startActivity(intent);
                             // Tidak perlu finish() di sini agar pengguna bisa kembali ke kamera jika perlu

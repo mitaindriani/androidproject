@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical"
-    tools:context=".RegisterActivity">
+    tools:context=".Register2Activity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,56 +59,42 @@
                 android:textSize="18sp" />
 
             <EditText
-                android:id="@+id/editTextNama"
+                android:id="@+id/editTextKelas"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:background="@drawable/rounded_corner_white_input"
-                android:hint="Nama Lengkap"
-                android:inputType="textPersonName"
+                android:hint="Kelas"
+                android:inputType="text"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#BDBDBD" />
 
             <EditText
-                android:id="@+id/editTextNisn"
+                android:id="@+id/editTextJurusan"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/rounded_corner_white_input"
-                android:hint="NISN"
-                android:inputType="number"
+                android:hint="Jurusan"
+                android:inputType="text"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#BDBDBD" />
 
             <EditText
-                android:id="@+id/editTextPassword"
+                android:id="@+id/editTextEmail"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/rounded_corner_white_input"
-                android:hint="Password"
-                android:inputType="textPassword"
+                android:hint="Email"
+                android:inputType="textEmailAddress"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#BDBDBD" />
-
-            <TextView
-                android:id="@+id/textViewSelanjutnya"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:layout_gravity="end"
-                android:layout_marginTop="8dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:minWidth="100dp"
-                android:minHeight="48dp"
-                android:padding="12dp"
-                android:text="Selanjutnya"
-                android:textColor="@android:color/white"
-                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/textViewLogin"
@@ -125,6 +111,15 @@
                 android:textColor="@android:color/white"
                 android:textSize="16sp" />
 
+            <Button
+                android:id="@+id/buttonRegister"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/rounded_corner_button"
+                android:text="Daftar"
+                android:textColor="@android:color/white"
+                android:textSize="18sp" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

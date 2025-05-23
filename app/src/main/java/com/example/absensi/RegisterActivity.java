@@ -1,14 +1,13 @@
-package com.example.absensi; // Ganti dengan package aplikasi Anda
+package com.example.absensi;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 public class RegisterActivity extends AppCompatActivity {
@@ -16,11 +15,12 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText editTextNama;
     private EditText editTextNisn;
     private EditText editTextPassword;
-    private Button buttonRegister;
+    // private Button buttonRegister; // This button is no longer used for registration here
     private TextView textViewLogin;
-    private DatabaseHelper dbHelper;
-    private SharedPreferences sharedPreferences;
+    private TextView textViewSelanjutnya; // This will now trigger the move to Register2Activity
+    // private DatabaseHelper dbHelper; // DatabaseHelper is no longer needed in this activity
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,17 +30,26 @@ public class RegisterActivity extends AppCompatActivity {
         editTextNama = findViewById(R.id.editTextNama);
         editTextNisn = findViewById(R.id.editTextNisn);
         editTextPassword = findViewById(R.id.editTextPassword);
-        buttonRegister = findViewById(R.id.buttonRegister);
+        // buttonRegister = findViewById(R.id.buttonRegister); // Remove this line
         textViewLogin = findViewById(R.id.textViewLogin);
+        textViewSelanjutnya = findViewById(R.id.textViewSelanjutnya);
 
-        // Inisialisasi DatabaseHelper
-        dbHelper = new DatabaseHelper(this);
+        // dbHelper = new DatabaseHelper(this); // Remove this line
 
-        // Inisialisasi SharedPreferences
-        sharedPreferences = getSharedPreferences("user_data", MODE_PRIVATE);
+        // Remove the buttonRegister.setOnClickListener block entirely from here.
+        // The registration logic (including dbHelper.addUser) has moved to Register2Activity.
 
-        // Set listener untuk tombol Daftar
-        buttonRegister.setOnClickListener(new View.OnClickListener() {
+        // Set listener untuk TextView Login
+        textViewLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigasi kembali ke LoginActivity
+                finish();
+            }
+        });
+
+        // Set listener untuk textViewSelanjutnya
+        textViewSelanjutnya.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Mendapatkan nilai dari input fields
@@ -50,41 +59,18 @@ public class RegisterActivity extends AppCompatActivity {
 
                 // Validasi input
                 if (nama.isEmpty() || nisn.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(RegisterActivity.this, "Semua kolom harus diisi", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Nama, NISN, dan Password harus diisi", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                // Periksa apakah NISN sudah terdaftar
-                if (dbHelper.checkUser(nisn)) {
-                    Toast.makeText(RegisterActivity.this, "NISN sudah terdaftar", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Lakukan proses registrasi dan simpan ke database
-                long result = dbHelper.addUser(nama, nisn, password);
-
-                if (result > 0) {
-                    Toast.makeText(RegisterActivity.this, "Registrasi berhasil!", Toast.LENGTH_SHORT).show();
-
-                    // Simpan data pengguna ke SharedPreferences
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("nama", nama);
-                    editor.putString("nisn", nisn);
-                    editor.apply();
-
-                    finish(); // Kembali ke halaman login setelah registrasi berhasil
-                } else {
-                    Toast.makeText(RegisterActivity.this, "Registrasi gagal!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        // Set listener untuk TextView Login
-        textViewLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigasi kembali ke LoginActivity
-                finish(); // Atau gunakan Intent untuk navigasi eksplisit
+                // Pass data to Register2Activity
+                Intent intent = new Intent(RegisterActivity.this, Register2Activity.class);
+                intent.putExtra("NAMA", nama);
+                intent.putExtra("NISN", nisn);
+                intent.putExtra("PASSWORD", password);
+                startActivity(intent);
+                // Optional: finish() RegisterActivity if you don't want it on the back stack
+                // finish();
             }
         });
     }

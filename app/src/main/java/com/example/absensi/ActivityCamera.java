@@ -34,7 +34,6 @@ import android.util.SparseIntArray;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -45,6 +44,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+// Import untuk CaptureFailure
+import android.hardware.camera2.CaptureFailure;
 
 public class ActivityCamera extends AppCompatActivity {
 
@@ -280,11 +282,11 @@ public class ActivityCamera extends AppCompatActivity {
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
 
-            final CameraDevice currentCameraDevice = cameraDevice; // Tambahkan ini
+            final CameraDevice currentCameraDevice = cameraDevice;
             cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession session) {
-                    if (currentCameraDevice == null) { // Gunakan currentCameraDevice
+                    if (currentCameraDevice == null) {
                         return;
                     }
                     cameraCaptureSessions = session;
@@ -374,13 +376,13 @@ public class ActivityCamera extends AppCompatActivity {
                         scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, stream);
                         byte[] compressedBytes = stream.toByteArray();
 
-                        Intent konfirmasiIntent = new Intent(ActivityCamera.this, KonfirmasiAbsenActivity.class);
+                        // Kirim data ke KonfirAbsenActivity
+                        Intent konfirmasiIntent = new Intent(ActivityCamera.this, KonfirAbsenActivity.class);
                         konfirmasiIntent.putExtra("image_bytes", compressedBytes);
                         konfirmasiIntent.putExtra("absen_type", absenType);
-                        // Tambahkan informasi orientasi pengambilan gambar
                         konfirmasiIntent.putExtra("camera_orientation", ORIENTATIONS.get(rotation));
                         startActivity(konfirmasiIntent);
-                        finish();
+                        finish(); // Penting: Tutup ActivityCamera setelah memulai KonfirAbsenActivity
                     } finally {
                         if (image != null) {
                             image.close();
@@ -395,17 +397,16 @@ public class ActivityCamera extends AppCompatActivity {
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
                     Toast.makeText(ActivityCamera.this, "Foto diambil", Toast.LENGTH_SHORT).show();
-                    // Tutup sesi pengambilan gambar
-                    closeCaptureSession();
-                    // Buka kembali kamera dan buat pratinjau setelah penundaan
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            openCamera(textureView.getWidth(), textureView.getHeight());
-                        }
-                    }, 1000); // Coba 1 detik// Coba penundaan
-                }};
+                }
+
+                @Override
+                public void onCaptureFailed(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull CaptureFailure failure) {
+                    super.onCaptureFailed(session, request, failure);
+                    Toast.makeText(ActivityCamera.this, "Gagal mengambil foto", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "onCaptureFailed: Gagal mengambil foto. Reason: " + failure.getReason());
+                    openCamera(textureView.getWidth(), textureView.getHeight());
+                }
+            };
 
             // Tutup sesi pratinjau sebelum membuat sesi pengambilan gambar
             closePreviewSession();
@@ -428,6 +429,7 @@ public class ActivityCamera extends AppCompatActivity {
                             public void onConfigureFailed(@NonNull CameraCaptureSession session) {
                                 Toast.makeText(ActivityCamera.this, "Gagal mengkonfigurasi pengambilan gambar", Toast.LENGTH_SHORT).show();
                                 Log.e(TAG, "onConfigureFailed (takePicture): Gagal mengkonfigurasi pengambilan gambar");
+                                openCamera(textureView.getWidth(), textureView.getHeight());
                             }
                         }, mBackgroundHandler
                 );
@@ -449,9 +451,9 @@ public class ActivityCamera extends AppCompatActivity {
     }
 
     private void closeCaptureSession() {
-        // Saat ini, kita menggunakan 'cameraCaptureSessions' untuk pratinjau.
-        // Jika Anda membuat sesi pengambilan gambar terpisah, pastikan untuk menutupnya di sini.
-        // Dalam implementasi saat ini, kita menutup sesi pratinjau di closePreviewSession.
+        // Metode ini tidak lagi diperlukan secara eksplisit di sini
+        // karena sesi pratinjau ditutup di closePreviewSession()
+        // dan aktivitas di-finish setelah gambar diambil.
     }
 
     private void transformImage(int viewWidth, int viewHeight) {

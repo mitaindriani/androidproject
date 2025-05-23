@@ -19,4 +19,6 @@
     <item name="kamisPulangTextView" type="id" />
     <item name="jumatMasukTextView" type="id" />
     <item name="jumatPulangTextView" type="id" />
+    <item name="btnAmbilUlang" type="id"/>
+    <item name="jamPulangTextView" type="id" />
 </resources>

@@ -55,11 +55,11 @@
             android:textSize="18sp" />
 
         <EditText
-            android:id="@+id/editTextNama"
+            android:id="@+id/editTextNisn"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:background="@drawable/rounded_corner_white_input"
-            android:hint="Nisn"
+            android:hint="NISN"
             android:inputType="textPersonName"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"

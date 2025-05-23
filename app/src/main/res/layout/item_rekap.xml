@@ -62,14 +62,14 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Jam Datang: 07:16:34"
+                    android:text="Jam Masuk: 07:16:34"
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/textTerlambat"
+                    android:id="@+id/textWaktuTerlambat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Terlambat: 00:00:00"
+                    android:text="Waktu Terlambat: 00:00:00"
                     android:textColor="#D32F2F"
                     android:textSize="14sp" />
 
@@ -79,6 +79,16 @@
                     android:layout_height="wrap_content"
                     android:text="Jam Pulang: --:--:--"
                     android:textSize="14sp" />
+
+                <ImageView
+                    android:id="@+id/imageViewFotoAbsen"
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:layout_marginTop="8dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:visibility="gone" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

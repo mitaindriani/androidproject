@@ -1,4 +1,4 @@
-package com.example.absensi; // Ganti dengan package aplikasi Anda
+package com.example.absensi;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,24 +9,30 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "absensi_db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2; // IMPORTANT: Increment to force onUpgrade
 
-    // Nama Tabel
+    // Table Name
     private static final String TABLE_USERS = "users";
 
-    // Kolom Tabel Users
+    // Column Names for Users Table
     private static final String COLUMN_ID = "id";
     private static final String COLUMN_NAMA = "nama";
     private static final String COLUMN_NISN = "nisn";
     private static final String COLUMN_PASSWORD = "password";
+    private static final String COLUMN_KELAS = "kelas";     // NEW COLUMN
+    private static final String COLUMN_JURUSAN = "jurusan"; // NEW COLUMN
+    private static final String COLUMN_EMAIL = "email";     // NEW COLUMN
 
-    // Perintah SQL untuk membuat tabel users
+    // SQL statement to create the users table
     private static final String CREATE_TABLE_USERS =
             "CREATE TABLE " + TABLE_USERS + "("
                     + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + COLUMN_NAMA + " TEXT NOT NULL,"
-                    + COLUMN_NISN + " TEXT UNIQUE NOT NULL,"
-                    + COLUMN_PASSWORD + " TEXT NOT NULL"
+                    + COLUMN_NISN + " TEXT UNIQUE NOT NULL," // NISN should be unique
+                    + COLUMN_PASSWORD + " TEXT NOT NULL,"
+                    + COLUMN_KELAS + " TEXT,"     // Added new columns
+                    + COLUMN_JURUSAN + " TEXT,"   // Added new columns
+                    + COLUMN_EMAIL + " TEXT"      // Added new columns
                     + ")";
 
     public DatabaseHelper(Context context) {
@@ -40,25 +46,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Jika ada perubahan skema database, tambahkan logika migrasi di sini
+        // This is a basic upgrade strategy: drop and recreate.
+        // In a real production app, you'd implement a more robust migration
+        // that preserves existing user data.
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
         onCreate(db);
     }
 
-    // Metode untuk menambahkan user baru ke database
-    public long addUser(String nama, String nisn, String password) {
+    // Method to add a new user to the database with all fields
+    public long addUser(String nama, String nisn, String password, String kelas, String jurusan, String email) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_NAMA, nama);
         values.put(COLUMN_NISN, nisn);
-        values.put(COLUMN_PASSWORD, password); // Perhatikan: Ini menyimpan password dalam plain text. Jangan lakukan ini di aplikasi produksi.
+        values.put(COLUMN_PASSWORD, password); // Warning: Storing passwords in plain text is insecure!
+        values.put(COLUMN_KELAS, kelas);
+        values.put(COLUMN_JURUSAN, jurusan);
+        values.put(COLUMN_EMAIL, email);
 
         long id = db.insert(TABLE_USERS, null, values);
         db.close();
         return id;
     }
 
-    // Metode untuk memeriksa apakah NISN sudah terdaftar
+    // Method to check if a NISN is already registered
     public boolean checkUser(String nisn) {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] columns = {COLUMN_ID};
@@ -71,10 +82,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return cursorCount > 0;
     }
 
-    // Metode untuk memverifikasi login dan mendapatkan data User
+    // Method to verify login and retrieve complete User data
     public User getUser(String nisn, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] columns = {COLUMN_ID, COLUMN_NAMA, COLUMN_NISN}; // Tidak perlu mengambil password lagi
+        String[] columns = {
+                COLUMN_ID,
+                COLUMN_NAMA,
+                COLUMN_NISN,
+                COLUMN_KELAS,
+                COLUMN_JURUSAN,
+                COLUMN_EMAIL
+        };
         String selection = COLUMN_NISN + " = ?" + " AND " + COLUMN_PASSWORD + " = ?";
         String[] selectionArgs = {nisn, password};
         Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
@@ -84,25 +102,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             int id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID));
             String nama = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAMA));
             String nisn_db = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NISN));
-            user = new User(id, nama, nisn_db);
+            String kelas = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_KELAS));
+            String jurusan = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_JURUSAN));
+            String email = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_EMAIL));
+
+            // Create a User object with all retrieved data
+            user = new User(id, nama, nisn_db, kelas, jurusan, email);
             cursor.close();
         }
         db.close();
         return user;
     }
 
-    // Inner class User to represent user data
+    // Inner class User to represent user data (updated to hold all fields)
     public static class User {
         private int id;
         private String nama;
         private String nisn;
+        private String kelas;
+        private String jurusan;
+        private String email;
 
-        public User(int id, String nama, String nisn) {
+        // Constructor for the User object
+        public User(int id, String nama, String nisn, String kelas, String jurusan, String email) {
             this.id = id;
             this.nama = nama;
             this.nisn = nisn;
+            this.kelas = kelas;
+            this.jurusan = jurusan;
+            this.email = email;
         }
 
+        // Getters for all user properties
         public int getId() {
             return id;
         }
@@ -113,6 +144,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         public String getNisn() {
             return nisn;
+        }
+
+        public String getKelas() {
+            return kelas;
+        }
+
+        public String getJurusan() {
+            return jurusan;
+        }
+
+        public String getEmail() {
+            return email;
         }
     }
 }
